@@ -433,3 +433,22 @@ func TestAutoOrientation(t *testing.T) {
 		t.Fatal("expected error got nil")
 	}
 }
+
+func TestDecodeWithMaxWidthOrHeigth(t *testing.T) {
+	f, err := os.Open("testdata/orientation_1.jpg")
+	if err != nil {
+		t.Fatalf("os.Open(%q): %v", "testdata/orientation_0.jpg", err)
+	}
+	defer f.Close()
+
+	_, err = Decode(f, AutoOrientationWithLimit(true, 10, 10))
+	if err == nil {
+		t.Fatal("expected error got nil")
+	}
+
+	_, _ = f.Seek(0, 0)
+	_, err = Decode(f, AutoOrientationWithLimit(true, 50, 70))
+	if err != nil {
+		t.Fatalf("image.Decode(%q): %v", "testdata/orientation_0.jpg", err)
+	}
+}

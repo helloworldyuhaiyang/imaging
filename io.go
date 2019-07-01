@@ -31,11 +31,14 @@ func (localFS) Open(name string) (io.ReadCloser, error)    { return os.Open(name
 var fs fileSystem = localFS{}
 
 type decodeConfig struct {
-	autoOrientation bool
+	autoOrientation     bool
+	maxWidth, maxHeigth int
 }
 
 var defaultDecodeConfig = decodeConfig{
 	autoOrientation: false,
+	maxWidth:        int(^uint(0) >> 1),
+	maxHeigth:       int(^uint(0) >> 1),
 }
 
 // DecodeOption sets an optional parameter for the Decode and Open functions.
@@ -47,6 +50,14 @@ type DecodeOption func(*decodeConfig)
 func AutoOrientation(enabled bool) DecodeOption {
 	return func(c *decodeConfig) {
 		c.autoOrientation = enabled
+	}
+}
+
+func AutoOrientationWithLimit(enabled bool, maxWidth, maxHeigth int) DecodeOption {
+	return func(c *decodeConfig) {
+		c.autoOrientation = enabled
+		c.maxWidth = maxWidth
+		c.maxHeigth = maxHeigth
 	}
 }
 
@@ -79,6 +90,12 @@ func Decode(r io.Reader, opts ...DecodeOption) (image.Image, error) {
 		return nil, err
 	}
 
+	if img.Bounds().Dx() > cfg.maxWidth {
+		return nil, errors.New("greater then maxWidth")
+	}
+	if img.Bounds().Dy() > cfg.maxHeigth {
+		return nil, errors.New("greater then maxHeigth")
+	}
 	return fixOrientation(img, orient), nil
 }
 
